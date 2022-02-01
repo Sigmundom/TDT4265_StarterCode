@@ -35,7 +35,15 @@ class LogisticTrainer(BaseTrainer):
             loss value (float) on batch
         """
         # TODO: Implement this function (task 2b)
-        loss = 0
+        outputs = self.model.forward(X_batch)
+
+        self.model.backward(X_batch, outputs, Y_batch)
+        # print(self.model.w, self.model.grad)
+        self.model.w -= self.learning_rate * self.model.grad
+
+        loss = cross_entropy_loss(Y_batch, outputs)
+        print(loss)
+        # exit()
         return loss
 
     def validation_step(self):
@@ -97,6 +105,7 @@ if __name__ == "__main__":
     print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model))
 
     # Plot loss for first model (task 2b)
+    print('plotting')
     plt.ylim([0., .2])
     utils.plot_loss(train_history["loss"],
                     "Training Loss", npoints_to_average=10)

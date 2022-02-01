@@ -12,7 +12,8 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-    # TODO implement this function (Task 2a)
+    X = X * (2/255) - 1
+    X = np.insert(X, 0, 1, axis=1) # Insert 1 at position 0 along the second axis.
     return X
 
 
@@ -24,17 +25,18 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     Returns:
         Cross entropy error (float)
     """
-    # TODO implement this function (Task 2a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    return 0
+
+    loss = np.average(-(targets*np.log(outputs) + (1 - targets) * np.log(1-outputs)))
+    return loss
 
 
 class BinaryModel:
 
     def __init__(self):
         # Define number of input nodes
-        self.I = None
+        self.I = 785
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
@@ -45,8 +47,10 @@ class BinaryModel:
         Returns:
             y: output of model with shape [batch size, 1]
         """
-        # TODO implement this function (Task 2a)
-        return None
+
+        y = 1 / (1 + np.exp(-X.dot(self.w)))
+
+        return y
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -56,10 +60,21 @@ class BinaryModel:
             outputs: outputs of model of shape: [batch size, 1]
             targets: labels/targets of each image of shape: [batch size, 1]
         """
-        # TODO implement this function (Task 2a)
+
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-        self.grad = np.zeros_like(self.w)
+
+
+        # grads = np.zeros_like(X)
+        # for n in range(len(X)):
+        #     grads[n]= -(targets[n]-outputs[n]) * X[n]
+        #     print(grads[n,:10])
+
+        # self.grad = np.average(grads, axis=0).reshape((self.I,1))
+        # print(self.grad[0,:10])
+        # exit()
+        self.grad = -(targets-outputs).T.dot(X).T / len(X)
+
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
@@ -69,7 +84,7 @@ class BinaryModel:
 
 def gradient_approximation_test(model: BinaryModel, X: np.ndarray, Y: np.ndarray):
     """
-        Numerical approximation for gradients. Should not be edited. 
+        Numerical approximation for gradients. Should not be edited.
         Details about this test is given in the appendix in the assignment.
     """
     w_orig = np.random.normal(loc=0, scale=1/model.w.shape[0]**2, size=model.w.shape)

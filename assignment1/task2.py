@@ -1,3 +1,4 @@
+from os import access
 import numpy as np
 import utils
 import matplotlib.pyplot as plt
@@ -16,7 +17,12 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: BinaryModel) -
         Accuracy (float)
     """
     # TODO Implement this function (Task 2c)
-    accuracy = 0.0
+
+    predictions = model.forward(X)
+    true_predictions = predictions > 0.5
+    correct_predictions = true_predictions == targets
+    accuracy = np.sum(correct_predictions) / len(predictions)
+
     return accuracy
 
 
@@ -38,12 +44,9 @@ class LogisticTrainer(BaseTrainer):
         outputs = self.model.forward(X_batch)
 
         self.model.backward(X_batch, outputs, Y_batch)
-        # print(self.model.w, self.model.grad)
         self.model.w -= self.learning_rate * self.model.grad
 
         loss = cross_entropy_loss(Y_batch, outputs)
-        print(loss)
-        # exit()
         return loss
 
     def validation_step(self):
@@ -71,7 +74,7 @@ class LogisticTrainer(BaseTrainer):
 
 if __name__ == "__main__":
     # hyperparameters DO NOT CHANGE IF NOT SPECIFIED IN ASSIGNMENT TEXT
-    num_epochs = 50
+    num_epochs = 500
     learning_rate = 0.05
     batch_size = 128
     shuffle_dataset = False

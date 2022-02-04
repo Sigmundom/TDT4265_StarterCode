@@ -92,10 +92,10 @@ class BaseTrainer:
                     # TODO (Task 2d): Implement early stopping here.
                     # You can access the validation loss in val_history["loss"]
                     losses = [*val_history["loss"].values()]
-                    if len(losses) > 10 and np.all(losses[-11] < losses[-10:]):
+                    if len(losses) > 10 and np.all(losses[-11] < losses[-10:]): # All ten last losses are higher than the 11th last.
                         early_stop = True
+                        print(f'Early stop kicks in after {epoch+1} epochs')
 
-                    print('Step:', global_step, end='\r')
                 global_step += 1
             if early_stop:
                 break

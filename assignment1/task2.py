@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # Load dataset
     category1, category2 = 2, 3
     X_train, Y_train, X_val, Y_val = utils.load_binary_dataset(
-        category1, category2)
+        category1, category2, sample_stochastic=False)
 
     X_train = pre_process_images(X_train)
     X_val = pre_process_images(X_val)
@@ -108,26 +108,26 @@ if __name__ == "__main__":
     print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model))
 
     # Plot loss for first model (task 2b)
-    print('plotting')
-    plt.ylim([0., .2])
-    utils.plot_loss(train_history["loss"],
-                    "Training Loss", npoints_to_average=10)
-    utils.plot_loss(val_history["loss"], "Validation Loss")
-    plt.legend()
-    plt.xlabel("Number of Training Steps")
-    plt.ylabel("Cross Entropy Loss - Average")
-    plt.savefig("task2b_binary_train_loss.png")
-    plt.show()
+    # print('plotting')
+    # plt.ylim([0., .2])
+    # utils.plot_loss(train_history["loss"],
+    #                 "Training Loss", npoints_to_average=10)
+    # utils.plot_loss(val_history["loss"], "Validation Loss")
+    # plt.legend()
+    # plt.xlabel("Number of Training Steps")
+    # plt.ylabel("Cross Entropy Loss - Average")
+    # plt.savefig("task2b_binary_train_loss.png")
+    # plt.show()
 
-    # Plot accuracy
-    plt.ylim([0.93, .99])
-    utils.plot_loss(train_history["accuracy"], "Training Accuracy")
-    utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
-    plt.xlabel("Number of Training Steps")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.savefig("task2b_binary_train_accuracy.png")
-    plt.show()
+    # # Plot accuracy
+    # plt.ylim([0.93, .99])
+    # utils.plot_loss(train_history["accuracy"], "Training Accuracy")
+    # utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
+    # plt.xlabel("Number of Training Steps")
+    # plt.ylabel("Accuracy")
+    # plt.legend()
+    # plt.savefig("task2c_binary_train_accuracy.png")
+    # plt.show()
 
     # Task 2e - Create a comparison between training with and without shuffling
     shuffle_dataset = True

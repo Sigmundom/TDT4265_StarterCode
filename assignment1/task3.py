@@ -17,7 +17,14 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
         Accuracy (float)
     """
     # TODO: Implement this function (task 3c)
-    accuracy = 0
+    outputs = model.forward(X)
+    # np.save('pred', predictions)
+    # np.save('tar', targets)
+    # exit()
+    predictions = np.argmax(outputs, axis=1)
+    correct_predictions = np.sum(predictions == np.where(targets==1)[1])
+    accuracy = np.sum(correct_predictions) / len(predictions)
+
     return accuracy
 
 
@@ -36,7 +43,12 @@ class SoftmaxTrainer(BaseTrainer):
             loss value (float) on batch
         """
         # TODO: Implement this function (task 3b)
-        loss = 0
+        outputs = self.model.forward(X_batch)
+
+        self.model.backward(X_batch, outputs, Y_batch)
+        self.model.w -= self.learning_rate * self.model.grad
+
+        loss = cross_entropy_loss(Y_batch, outputs)
         return loss
 
     def validation_step(self):
@@ -102,7 +114,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Cross Entropy Loss - Average")
-    plt.savefig("task3b_softmax_train_loss.png")
+    # plt.savefig("task3b_softmax_train_loss.png")
     plt.show()
 
     # Plot accuracy
@@ -112,7 +124,8 @@ if __name__ == "__main__":
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Accuracy")
     plt.legend()
-    plt.savefig("task3b_softmax_train_accuracy.png")
+    # plt.savefig("task3c_softmax_train_accuracy.png")
+    # plt.savefig("task3d_softmax_train_accuracy_overfitting.png")
     plt.show()
 
     # Train a model with L2 regularization (task 4b)

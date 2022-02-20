@@ -73,6 +73,7 @@ class BaseTrainer:
         )
 
         global_step = 0
+        early_stop = False
         for epoch in range(num_epochs):
             train_loader = utils.batch_loader(
                 self.X_train, self.Y_train, self.batch_size, shuffle=self.shuffle_dataset)
@@ -87,6 +88,14 @@ class BaseTrainer:
                     train_history["accuracy"][global_step] = accuracy_train
                     val_history["loss"][global_step] = val_loss
                     val_history["accuracy"][global_step] = accuracy_val
-                    # TODO: Implement early stopping (copy from last assignment)
+
+                    losses = [*val_history["loss"].values()]
+                    if len(losses) > 50 and np.all(losses[-51] < losses[-50:]): # All 50 last losses are higher than the 51th last.
+                        early_stop = True
+                        print(f'Early stop kicks in after {epoch+1} epochs')
+
                 global_step += 1
+            if early_stop:
+                break
+
         return train_history, val_history

@@ -15,8 +15,10 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
     Returns:
         Accuracy (float)
     """
-    # TODO: Implement this function (copy from last assignment)
-    accuracy = 0
+    outputs = model.forward(X)
+    predictions = np.argmax(outputs, axis=1)
+    correct_predictions = np.sum(predictions == np.where(targets==1)[1])
+    accuracy = np.sum(correct_predictions) / len(predictions)
     return accuracy
 
 
@@ -46,11 +48,21 @@ class SoftmaxTrainer(BaseTrainer):
         Returns:
             loss value (float) on batch
         """
-        # TODO: Implement this function (task 2c)
+        logits = self.model.forward(X_batch)
 
-        loss = 0
+        self.model.backward(X_batch, logits, Y_batch)
 
-        loss = cross_entropy_loss(Y_batch, logits)  # sol
+        if self.use_momentum:
+            grads = [grad + self.momentum_gamma * prev_grad for grad, prev_grad in zip(self.model.grads, self.previous_grads)]
+            self.model.ws = [w - self.learning_rate * grad for w, grad in zip(self.model.ws, grads)]
+            self.previous_grads = grads
+        else:
+            self.model.ws = [w - self.learning_rate * grad for w, grad in zip(self.model.ws, self.model.grads)]
+
+        self.model.zero_grad()
+
+        loss = cross_entropy_loss(Y_batch, logits)
+        # print(loss)
 
         return loss
 
@@ -109,7 +121,6 @@ if __name__ == "__main__":
         X_train, Y_train, X_val, Y_val,
     )
     train_history, val_history = trainer.train(num_epochs)
-
     print("Final Train Cross Entropy Loss:",
           cross_entropy_loss(Y_train, model.forward(X_train)))
     print("Final Validation Cross Entropy Loss:",

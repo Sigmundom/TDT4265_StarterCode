@@ -59,5 +59,11 @@ def load():
     return mnist["training_images"], mnist["training_labels"], mnist["test_images"], mnist["test_labels"]
 
 
+def init():
+    data = load()
+    training_images = data[0]
+    print('Mean:', np.mean(training_images))
+    print('Standard deviation:', np.std(training_images))
+
 if __name__ == '__main__':
     init()

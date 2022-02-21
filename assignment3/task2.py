@@ -29,17 +29,38 @@ class ExampleModel(nn.Module):
                 kernel_size=5,
                 stride=1,
                 padding=2
-            )
+            ),
+            ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(
+                in_channels=num_filters,
+                out_channels=64,
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=128,
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
         # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
-        self.num_output_features = 32*32*32
+        self.num_output_features = 32*32*128
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
-            nn.Linear(self.num_output_features, num_classes),
+            nn.Linear(self.num_output_features, 64, activation=ReLU),
+            nn.Linear(64, num_classes),
         )
 
     def forward(self, x):
@@ -50,7 +71,9 @@ class ExampleModel(nn.Module):
         """
         # TODO: Implement this function (Task  2a)
         batch_size = x.shape[0]
-        out = x
+        out = self.feature_extractor(x)
+        out = out.view(batch_size, -1)
+        out = self.classifier(out)
         expected_shape = (batch_size, self.num_classes)
         assert out.shape == (batch_size, self.num_classes),\
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
@@ -77,7 +100,7 @@ def create_plots(trainer: Trainer, name: str):
 
 def main():
     # Set the random generator seed (parameters, shuffling etc).
-    # You can try to change this and check if you still get the same result! 
+    # You can try to change this and check if you still get the same result!
     utils.set_seed(0)
     epochs = 10
     batch_size = 64

@@ -31,6 +31,18 @@ def to_cuda(elements):
         return elements.cuda()
     return elements
 
+def to_cpu(elements):
+    """
+    Transfers every object in elements to GPU VRAM if available.
+    elements can be a object or list/tuple of objects
+    """
+    if (type(elements) == tuple or type(elements) == list):
+        if type(elements[0]) == torch.Tensor and elements[0].is_cuda:
+            return [x.cpu() for x in elements]
+    elif type(elements) == torch.Tensor and elements.is_cuda:
+        return elements.cpu()
+    return elements
+
 
 def save_checkpoint(state_dict: dict,
                     filepath: pathlib.Path,
@@ -83,6 +95,8 @@ def plot_loss(loss_dict: dict, label: str = None, npoints_to_average=1, plot_var
     """
     global_steps = list(loss_dict.keys())
     loss = list(loss_dict.values())
+    loss = to_cpu(loss)
+    # print(type(global_steps[0]))
     if npoints_to_average == 1 or not plot_variance:
         plt.plot(global_steps, loss, label=label)
         return

@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import typing
 import time
@@ -33,8 +34,7 @@ def compute_loss_and_accuracy(
 
             # Compute Loss and Accuracy
             average_loss += loss_criterion(output_probs, Y_batch)
-
-            accuracy += np.average(Y_batch-output_probs)
+            accuracy += sum(Y_batch == output_probs.argmax(axis=1)) / len(Y_batch)
 
     average_loss /= len(dataloader)
     accuracy /= len(dataloader)
@@ -68,7 +68,9 @@ class Trainer:
         print(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        self.optimizer = torch.optim.SGD(self.model.parameters(),
+        # self.optimizer = torch.optim.SGD(self.model.parameters(),
+        #                                  self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
                                          self.learning_rate)
 
         # Load our dataset
@@ -93,8 +95,7 @@ class Trainer:
 
     def validation_step(self):
         """
-            Computes the loss/accuracy for all three datasets.
-            Train, validation and test.
+            Computes the loss/accuracy for the validation dataset.
         """
         self.model.eval()
         validation_loss, validation_acc = compute_loss_and_accuracy(
@@ -111,6 +112,21 @@ class Trainer:
             f"Validation Accuracy: {validation_acc:.3f}",
             sep=", ")
         self.model.train()
+
+    def final_accuracy(self):
+        """
+            Computes the final accuracy for all three datasets.
+            Train, validation and test.
+        """
+        self.model.eval()
+        print("Final accuracy:")
+        for dataloader, name in zip([self.dataloader_train, self.dataloader_val, self.dataloader_test], ['train', 'validation', 'test']):
+            loss, accuracy = compute_loss_and_accuracy(
+                dataloader, self.model, self.loss_criterion
+            )
+            print(f"{name:s}:\n Accuracy: {accuracy:.3f}, Loss: {loss:.2f} ")
+        self.model.train()
+
 
     def should_early_stop(self):
         """

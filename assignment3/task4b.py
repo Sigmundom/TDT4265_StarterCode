@@ -46,3 +46,5 @@ def torch_image_to_numpy(image: torch.Tensor):
 
 
 indices = [14, 26, 32, 49, 52]
+
+print('good')

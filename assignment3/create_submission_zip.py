@@ -25,7 +25,8 @@ files_to_include = {
     "task4b": [".py"],
     "trainer": [".py"],
     "utils": [".py"],
-    "dataloaders": [".py"]
+    "dataloaders": [".py"],
+    "task4a": [".py"]
 }
 zipfile_path = "assignment_code.zip"
 print("-"*80)

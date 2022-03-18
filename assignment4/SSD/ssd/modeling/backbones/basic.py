@@ -1,6 +1,4 @@
-# import torch
 from torch import nn
-import torch.nn.functional as F
 from typing import Tuple, List
 
 
@@ -23,62 +21,99 @@ class BasicModel(nn.Module):
         self.out_channels = output_channels
         self.output_feature_shape = output_feature_sizes
 
-        self.feature_extractors = [
+        self.feature_extractors = nn.ModuleList([
             #1
             nn.Sequential(
-                nn.Conv2d(self.image_channels, 32, kernel_size=3, padding=1),
+                nn.Conv2d(image_channels, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
                 nn.ReLU(inplace=True),
+
                 nn.MaxPool2d(kernel_size=2, stride=2),
+
+                nn.Dropout(0.15),
                 nn.Conv2d(32, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
                 nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Conv2d(64, 64, kernel_size=3, padding=1),
+
+                nn.Dropout(0.15),
+                nn.Conv2d(64, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
+
+                nn.Dropout(0.15),
+                nn.Conv2d(128, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
+                nn.ReLU(inplace=True),
+
                 nn.MaxPool2d(kernel_size=2, stride=2),
+
+                nn.Dropout(0.15),
+                nn.Conv2d(128, 256, kernel_size=3, padding=1),
+                nn.BatchNorm2d(256),
+                nn.ReLU(inplace=True),
+
+
+                nn.Dropout(0.15),
+                nn.Conv2d(256, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
+                nn.ReLU(inplace=True),
+
+                nn.Dropout(0.15),
+                nn.Conv2d(128, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(inplace=True),
+
+
                 nn.Conv2d(64, self.out_channels[0], kernel_size=3, padding=1, stride=2),
+                nn.BatchNorm2d(self.out_channels[0]),
                 nn.ReLU(inplace=True),
             ),
             # 2
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[0], 128, kernel_size=3, padding=1),
-                nn.MaxPool2d(kernel_size=2, stride=2),
+                # nn.BatchNorm2d(128),
+                nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[1], kernel_size=3, padding=1, stride=2),
+                # nn.BatchNorm2d(self.out_channels[1]),
                 nn.ReLU(inplace=True),
             ),
             # 3
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[1], 256, kernel_size=3, padding=1),
+                # nn.BatchNorm2d(256),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(256, self.out_channels[2], kernel_size=3, padding=1, stride=2),
+                # nn.BatchNorm2d(self.out_channels[2]),
                 nn.ReLU(inplace=True),
             ),
             # 4
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[2], 128, kernel_size=3, padding=1),
+                # nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[3], kernel_size=3, padding=1, stride=2),
+                # nn.BatchNorm2d(self.out_channels[3]),
                 nn.ReLU(inplace=True),
             ),
             # 5
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[3], 128, kernel_size=3, padding=1),
+                # nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[4], kernel_size=3, padding=1, stride=2),
+                # nn.BatchNorm2d(self.out_channels[4]),
                 nn.ReLU(inplace=True),
             ),
             # 6
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[4], 128, kernel_size=3, padding=1),
+                # nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[5], kernel_size=3, padding=0),
                 nn.ReLU(inplace=True),
             )
-        ]
+        ])
+
 
     def forward(self, x):
         """
@@ -93,11 +128,10 @@ class BasicModel(nn.Module):
         where out_features[0] should have the shape:
             shape(-1, output_channels[0], 38, 38),
         """
-        in_features = x
         out_features = []
         for feature_extractor in self.feature_extractors:
-            out_features.append(feature_extractor(in_features))
-            in_features = out_features[-1]
+            x = feature_extractor(x)
+            out_features.append(x)
 
         for idx, feature in enumerate(out_features):
             out_channel = self.out_channels[idx]

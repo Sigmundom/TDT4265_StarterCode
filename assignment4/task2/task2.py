@@ -160,16 +160,18 @@ def calculate_precision_recall_all_images(
         tuple: (precision, recall). Both float.
     """
 
-    precision = 0
-    recall = 0
+    num_tp = 0
+    num_fp = 0
+    num_fn = 0
 
     for p_boxes, gt_boxes in zip(all_prediction_boxes, all_gt_boxes):
         image_result = calculate_individual_image_result(p_boxes, gt_boxes, iou_threshold)
-        precision += calculate_precision(image_result['true_pos'], image_result['false_pos'], image_result['false_neg'])
-        recall += calculate_recall(image_result['true_pos'], image_result['false_pos'], image_result['false_neg'])
+        num_tp += image_result['true_pos']
+        num_fp += image_result['false_pos']
+        num_fn += image_result['false_neg']
 
-    precision /= len(all_prediction_boxes)
-    recall /= len(all_prediction_boxes)
+    precision = calculate_precision(num_tp, num_fp, num_fn)
+    recall = calculate_recall(num_tp, num_fp, num_fn)
 
     return (precision, recall)
 

@@ -36,7 +36,7 @@ class SSD300(nn.Module):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
-                if param.dim() > 1: nn.init.xavier_uniform_(param, gain=nn.init.calculate_gain('relu'))
+                if param.dim() > 1: nn.init.xavier_uniform_(param)
 
     def regress_boxes(self, features):
         locations = []

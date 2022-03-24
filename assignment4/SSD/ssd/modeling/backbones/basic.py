@@ -71,43 +71,43 @@ class BasicModel(nn.Module):
             # 2
             nn.Sequential(
                 nn.Conv2d(self.out_channels[0], 128, kernel_size=3, padding=1),
-                # nn.BatchNorm2d(128),
+                nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[1], kernel_size=3, padding=1, stride=2),
-                # nn.BatchNorm2d(self.out_channels[1]),
+                nn.BatchNorm2d(self.out_channels[1]),
                 nn.ReLU(inplace=True),
             ),
             # 3
             nn.Sequential(
                 nn.Conv2d(self.out_channels[1], 256, kernel_size=3, padding=1),
-                # nn.BatchNorm2d(256),
+                nn.BatchNorm2d(256),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(256, self.out_channels[2], kernel_size=3, padding=1, stride=2),
-                # nn.BatchNorm2d(self.out_channels[2]),
+                nn.BatchNorm2d(self.out_channels[2]),
                 nn.ReLU(inplace=True),
             ),
             # 4
             nn.Sequential(
                 nn.Conv2d(self.out_channels[2], 128, kernel_size=3, padding=1),
-                # nn.BatchNorm2d(128),
+                nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[3], kernel_size=3, padding=1, stride=2),
-                # nn.BatchNorm2d(self.out_channels[3]),
+                nn.BatchNorm2d(self.out_channels[3]),
                 nn.ReLU(inplace=True),
             ),
             # 5
             nn.Sequential(
                 nn.Conv2d(self.out_channels[3], 128, kernel_size=3, padding=1),
-                # nn.BatchNorm2d(128),
+                nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[4], kernel_size=3, padding=1, stride=2),
-                # nn.BatchNorm2d(self.out_channels[4]),
+                nn.BatchNorm2d(self.out_channels[4]),
                 nn.ReLU(inplace=True),
             ),
             # 6
             nn.Sequential(
                 nn.Conv2d(self.out_channels[4], 128, kernel_size=3, padding=1),
-                # nn.BatchNorm2d(128),
+                nn.BatchNorm2d(128),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(128, self.out_channels[5], kernel_size=3, padding=0),
                 nn.ReLU(inplace=True),

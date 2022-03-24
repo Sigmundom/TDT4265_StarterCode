@@ -5,7 +5,7 @@ from .anchor_encoder import AnchorEncoder
 from torchvision.ops import batched_nms
 
 class SSD300(nn.Module):
-    def __init__(self, 
+    def __init__(self,
             feature_extractor: nn.Module,
             anchors,
             loss_objective,
@@ -36,7 +36,7 @@ class SSD300(nn.Module):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
-                if param.dim() > 1: nn.init.xavier_uniform_(param)
+                if param.dim() > 1: nn.init.xavier_uniform_(param, gain=nn.init.calculate_gain('relu'))
 
     def regress_boxes(self, features):
         locations = []
@@ -50,7 +50,7 @@ class SSD300(nn.Module):
         confidences = torch.cat(confidences, 2).contiguous()
         return bbox_delta, confidences
 
-    
+
     def forward(self, img: torch.Tensor, **kwargs):
         """
             img: shape: NCHW
@@ -59,7 +59,7 @@ class SSD300(nn.Module):
             return self.forward_test(img, **kwargs)
         features = self.feature_extractor(img)
         return self.regress_boxes(features)
-    
+
     def forward_test(self,
             img: torch.Tensor,
             imshape=None,
@@ -83,7 +83,7 @@ class SSD300(nn.Module):
             predictions.append((boxes, categories, scores))
         return predictions
 
- 
+
 def filter_predictions(
         boxes_ltrb: torch.Tensor, confs: torch.Tensor,
         nms_iou_threshold: float, max_output: int, score_threshold: float):
@@ -108,4 +108,3 @@ def filter_predictions(
         # 3. Only keep max_output best boxes (NMS returns indices in sorted order, decreasing w.r.t. scores)
         keep_idx = keep_idx[:max_output]
         return boxes_ltrb[keep_idx], category[keep_idx], scores[keep_idx]
-    

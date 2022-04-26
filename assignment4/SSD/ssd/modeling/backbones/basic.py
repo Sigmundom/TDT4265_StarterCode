@@ -21,6 +21,7 @@ class BasicModel(torch.nn.Module):
             output_feature_sizes: List[Tuple[int]]):
         super().__init__()
         self.out_channels = output_channels
+        self.image_channels = image_channels
         self.output_feature_shape = output_feature_sizes
         self.feature_extractors = [
             #1
@@ -32,50 +33,51 @@ class BasicModel(torch.nn.Module):
                 nn.ReLU(),
                 nn.Conv2d(64, 64, kernel_size=3, padding=1),
                 nn.ReLU(),
-                nn.Conv2d(64, self.out_channels[0], kernel_size=2, padding=1, stride=2),
+                nn.Conv2d(64, self.out_channels[0], kernel_size=3, padding=1, stride=2),
                 nn.ReLU(),
             ),
             # 2
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[0], 128, kernel_size=3, padding=1),
-                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                # nn.MaxPool2d(kernel_size=2, stride=2),
                 nn.Conv2d(128, self.out_channels[1], kernel_size=3, padding=1, stride=2),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             ),
             # 3
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[1], 256, kernel_size=3, padding=1),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 nn.Conv2d(256, self.out_channels[2], kernel_size=3, padding=1, stride=2),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             ),
             # 4
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[2], 128, kernel_size=3, padding=1),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 nn.Conv2d(128, self.out_channels[3], kernel_size=3, padding=1, stride=2),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             ),
             # 5
             nn.Sequential(
-                nn.ReLU(inplace=True),
                 nn.Conv2d(self.out_channels[3], 128, kernel_size=3, padding=1),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
                 nn.Conv2d(128, self.out_channels[4], kernel_size=3, padding=1, stride=2),
-                nn.ReLU(inplace=True),
+                nn.ReLU(),
             ),
             # 6
             nn.Sequential(
-                nn.ReLU(inplace=True),
-                nn.Conv2d(self.out_channels[4], 128, kernel_size=3, padding=1),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(128, self.out_channels[5], kernel_size=3, padding=0),
-                nn.ReLU(inplace=True),
+                nn.Conv2d(self.out_channels[4], 128, kernel_size=2, stride=2, padding=1),
+                nn.ReLU(),
+                # nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Conv2d(128, self.out_channels[5], kernel_size=2, padding=0),
+                nn.ReLU(),
             )
         ]
+
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        for feature_extractor in self.feature_extractors:
+            feature_extractor.to(device)
 
     def forward(self, x):
         """
@@ -94,6 +96,7 @@ class BasicModel(torch.nn.Module):
         out_features = []
 
         for feature_extractor in self.feature_extractors:
+            # print(in_features.shape)
             out_features.append(feature_extractor(in_features))
             in_features = out_features[-1]
 

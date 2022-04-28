@@ -67,10 +67,9 @@ class BasicModel(torch.nn.Module):
             ),
             # 6
             nn.Sequential(
-                nn.Conv2d(self.out_channels[4], 128, kernel_size=2, stride=2, padding=1),
+                nn.Conv2d(self.out_channels[4], 128, kernel_size=2, padding=1),
                 nn.ReLU(),
-                # nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Conv2d(128, self.out_channels[5], kernel_size=2, padding=0),
+                nn.Conv2d(128, self.out_channels[5], kernel_size=2, padding=0, stride=2),
                 nn.ReLU(),
             )
         ]

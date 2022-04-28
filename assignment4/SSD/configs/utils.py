@@ -18,7 +18,7 @@ def get_output_dir():
         print(f"It looks like you are currently working on the server, with a 'working directory' in: {work_dir}")
         if save_in_work:
             print("Saving all SSD outputs to:", work_dir.joinpath("ssd_outputs"))
-            return work_dir.joinpath("ssd_outputs")
+            return work_dir.joinpath("ssd_outputs/bleh")
         else:
             print("\tIf you struggle with NTNU home directory becoming full, we recommend you to change the output directory to:", work_dir)
             print(f"\t {work_dir} does not sync with NTNU HOME, and is a directory only located on the server.")

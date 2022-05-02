@@ -186,3 +186,72 @@ class Resize(torch.nn.Module):
     def forward(self, batch):
         batch["image"] = torchvision.transforms.functional.resize(batch["image"], self.imshape, antialias=True)
         return batch
+
+class Bbox:
+    def __init__(self, x1, y1, h, w):
+        self.height = h
+        self.width = w
+        self.x1 = x1
+        self.x2 = x1 + w
+        self.y1 = y1
+        self.y2 = y1 + h
+        self.box = [self.x1, self.y1, self.x2, self.y2]
+
+    @property
+    def area(self):
+        """
+        Calculates the surface area. useful for IOU!
+        """
+        return (self.x2 - self.x1 + 1) * (self.y2 - self.y1 + 1)
+
+    def intersect(self, bbox):
+        x1 = max(self.x1, bbox.x1)
+        y1 = max(self.y1, bbox.y1)
+        x2 = min(self.x2, bbox.x2)
+        y2 = min(self.y2, bbox.y2)
+        intersection = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+        return intersection
+
+    def iou(self, bbox):
+        intersection = self.intersect(bbox)
+
+        iou = intersection / float(self.area + bbox.area - intersection)
+        # return the intersection over union value
+        return iou
+
+
+class RandomErasing(torch.nn.Module):
+
+    def __init__(self, p=0.25, scale=(0.02, 0.33), ratio=(0.3, 3.3)):
+        super().__init__()
+        self.p = p
+        self.scale = scale
+        self.ratio = ratio
+
+    def __call__(self, sample):
+        image = sample["image"]
+        if np.random.uniform() < self.p:
+            (i, j, h, w, v)= torchvision.transforms.RandomErasing.get_params(image, self.scale, self.ratio)
+            sample["image"] = torchvision.transforms.functional.erase(image, i, j, h, w, v)
+            boxes = sample["boxes"]
+            print(boxes)
+      
+            (_, image_h, image_w) = image.shape 
+            keep_boxes = []
+            for i, box in enumerate(boxes):
+                x1 = int(box[0] * image_w)
+                y1 = int(box[1] * image_h)
+                w = int((box[2] - box[0]) * image_w)
+                h = int((box[3] - box[1]) * image_h)
+                rect_box = Bbox(x1, y1, h, w)
+                rect_erased = Bbox(i, j, h, w)
+                iou = rect_box.iou(rect_erased)
+                if iou < 0.5:
+                    keep_boxes.append(i)
+
+            sample["boxes"] = boxes[keep_boxes]
+            sample["labels"] = sample["labels"][keep_boxes]
+        
+        return sample
+
+

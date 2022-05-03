@@ -229,12 +229,11 @@ class RandomErasing(torch.nn.Module):
         self.ratio = ratio
 
     def __call__(self, sample):
-        image = sample["image"]
         if np.random.uniform() < self.p:
+            image = sample["image"]
             (i, j, h, w, v)= torchvision.transforms.RandomErasing.get_params(image, self.scale, self.ratio)
             sample["image"] = torchvision.transforms.functional.erase(image, i, j, h, w, v)
             boxes = sample["boxes"]
-            print(boxes)
       
             (_, image_h, image_w) = image.shape 
             keep_boxes = []
@@ -249,8 +248,9 @@ class RandomErasing(torch.nn.Module):
                 if iou < 0.5:
                     keep_boxes.append(i)
 
-            sample["boxes"] = boxes[keep_boxes]
-            sample["labels"] = sample["labels"][keep_boxes]
+            if len(keep_boxes) > 0:
+                sample["boxes"] = boxes[keep_boxes]
+                sample["labels"] = sample["labels"][keep_boxes]
         
         return sample
 

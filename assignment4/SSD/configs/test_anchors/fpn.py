@@ -2,7 +2,7 @@ from tops.config import LazyCall as L
 from ssd.modeling.backbones import FPN
 
 # The line belows inherits the configuration set for the tdt4265 dataset
-from .data_augmentation import (
+from .data_augmentation_erase import (
     train,
     optimizer,
     schedulers,

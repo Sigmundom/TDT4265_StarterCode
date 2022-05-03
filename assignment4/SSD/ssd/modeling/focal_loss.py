@@ -14,13 +14,15 @@ class FocalLoss(nn.Module):
     """
     def __init__(self, anchors, alpha, gamma):
         super().__init__()
+        # print('ARGS')
+        # print(anchors, alpha, gamma)
         self.scale_xy = 1.0/anchors.scale_xy
         self.scale_wh = 1.0/anchors.scale_wh
 
         self.sl1_loss = nn.SmoothL1Loss(reduction='none')
         self.anchors = nn.Parameter(anchors(order="xywh").transpose(0, 1).unsqueeze(dim = 0),
             requires_grad=False)
-        self.alpha = alpha
+        self.alpha = torch.Tensor(alpha).reshape((1,len(alpha))).cuda()
         self.gamma = gamma
         
 
@@ -45,37 +47,13 @@ class FocalLoss(nn.Module):
         """
         gt_bbox = gt_bbox.transpose(1, 2).contiguous() # reshape to [batch_size, 4, num_anchors]
         
-        assert confs.shape[1] == len(self.alpha), f'num_classes in confs is  {confs.shape[1]} while only {len(self.alpha)} alphas is given'
-        batch_size, num_classes, num_anchors = confs.shape
+        confs= F.softmax(confs, dim=1)
+        confs_log= F.log_softmax(confs, dim=1)
+ 
+        num_classes = confs.shape[1]
+        gt_labels_one_hot = F.one_hot(gt_labels, num_classes=num_classes).transpose(1,2)
 
-        # print(confs.shape)
-        confs= - F.softmax(confs)
-        confs_log= - F.log_softmax(confs)
-        # print(confs_log.shape)
-
-        gt_labels_one_hot = F.one_hot(gt_labels, num_classes=num_classes)
-        assert list(gt_labels_one_hot.shape) == [batch_size, gt_labels.shape[1], num_classes], f'Actual shape: {gt_labels_one_hot.shape}. Expected {[batch_size, gt_labels.shape[1], num_classes]}'
-        
-        focal_loss_per_sample = []
-        for s in range(batch_size):
-            focal_loss_per_class =  []
-            for k in range(num_classes):
-                assert type(self.alpha[k]) == int or float
-                assert len(confs[s,k]) == num_anchors, confs[s,k].shape
-                assert len(gt_labels_one_hot[s,:,k]) == num_anchors, gt_labels[s,:,k].shape
-                fl_k = self.alpha[k] * (1-confs[s,k])**self.gamma * gt_labels_one_hot[s,:,k] * confs_log[s,k]
-                # print(fl_k.shape, fl_k[fl_k != 0].shape)
-                focal_loss_per_class.append(fl_k.sum())
-            focal_loss_per_sample.append(-np.sum(focal_loss_per_class))
-        
-        classification_loss = sum(focal_loss_per_sample)
-
-
-        # with torch.no_grad():
-        #     to_log = - F.log_softmax(confs, dim=1)[:, 0]
-        #     mask = hard_negative_mining(to_log, gt_labels, 3.0)
-        # classification_loss = F.cross_entropy(confs, gt_labels, reduction="none")
-        # classification_loss = classification_loss[mask].sum()
+        focal_loss = -self.alpha.matmul((1-confs)**self.gamma) * gt_labels_one_hot * confs_log 
 
         pos_mask = (gt_labels > 0).unsqueeze(1).repeat(1, 4, 1)
         bbox_delta = bbox_delta[pos_mask]
@@ -83,6 +61,7 @@ class FocalLoss(nn.Module):
         gt_locations = gt_locations[pos_mask]
         regression_loss = F.smooth_l1_loss(bbox_delta, gt_locations, reduction="sum")
         num_pos = gt_locations.shape[0]/4
+        classification_loss = focal_loss.sum() / num_pos 
         total_loss = regression_loss/num_pos + classification_loss/num_pos
         to_log = dict(
             regression_loss=regression_loss/num_pos,
@@ -90,3 +69,15 @@ class FocalLoss(nn.Module):
             total_loss=total_loss
         )
         return total_loss, to_log
+
+
+if __name__ == '__main__':
+    bbox_delta = torch.from_numpy(np.load('bbox_delta.npy')).cuda()
+    confs = torch.from_numpy(np.load('confs.npy')).cuda()
+    gt_bbox = torch.from_numpy(np.load('gt_bbox.npy')).cuda()
+    gt_labels = torch.from_numpy(np.load('gt_labels.npy')).cuda()
+
+    f = FocalLoss([0.01, 0, 1, 2, 3, 4, 5, 6, 7], 1)
+    loss = f.forward(bbox_delta, confs, gt_bbox, gt_labels)
+    print('Finished')
+    print(loss)

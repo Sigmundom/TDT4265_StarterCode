@@ -18,4 +18,4 @@ from .fpn import (
     anchors
 )
 
-loss_objective = L(FocalLoss)(anchors="${anchors}", alpha=[0.01, *[i for i in range(model.num_classes-1)]], gamma=1)
+loss_objective = L(FocalLoss)(anchors="${anchors}", alpha=[0.01, *[1 for _ in range(model.num_classes-1)]], gamma=1)

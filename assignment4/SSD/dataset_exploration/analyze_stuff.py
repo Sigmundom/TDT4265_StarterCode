@@ -110,6 +110,7 @@ def analyze_something(dataloader, cfg):
         #exit()
 
     print(nb)
+    print("On average, each image has", nb[0]/16533, "objects.")
 
     for i in range(len(sum_size)) :
         if nb[i] != 0 :

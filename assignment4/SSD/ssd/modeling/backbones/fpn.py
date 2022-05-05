@@ -17,6 +17,7 @@ class FPN(torch.nn.Module):
      shape(-1, output_channels[4], 1, 1)]
     """
     def __init__(self, 
+            output_channels: int,
             image_channels: int,
             output_feature_sizes: List[Tuple[int]], 
             type, 
@@ -29,20 +30,21 @@ class FPN(torch.nn.Module):
 
         print(type)
         if type == 'resnet34':
-            self.out_channels = [64, 64, 128, 256, 512, 64]
+            self.in_channels_list = [64, 64, 128, 256, 512, 64]
             self.resnet = torchvision.models.resnet34(pretrained=pretrained)
         elif type == 'resnet50':
-            self.out_channels = [64, 256, 512, 1024, 2048, 64]
+            self.in_channels_list = [64, 256, 512, 1024, 2048, 64]
             self.resnet = torchvision.models.resnet50(pretrained=pretrained)
         else:
             raise Exception(f'FPN does not support model type {type}')
 
-        self.fpn = torchvision.ops.FeaturePyramidNetwork(self.out_channels, 5)
+        self.out_channels = 6*[output_channels]
+        self.fpn = torchvision.ops.FeaturePyramidNetwork(self.in_channels_list, output_channels)
 
         self.extra = nn.Sequential(
-                nn.Conv2d(self.out_channels[4], 128, kernel_size=2, padding=1, stride=2),
+                nn.Conv2d(self.in_channels_list[4], 128, kernel_size=2, padding=1, stride=2),
                 nn.ReLU(),
-                nn.Conv2d(128, self.out_channels[5], kernel_size=2, padding=0),
+                nn.Conv2d(128, self.in_channels_list[5], kernel_size=2, padding=0),
                 nn.ReLU(),
             )
 
@@ -88,6 +90,8 @@ class FPN(torch.nn.Module):
 
         x = self.extra(x)
         out_features['feat5'] = x
+
+        out_features = self.fpn(out_features)
          
 
         for idx, feature in enumerate(out_features.values()):

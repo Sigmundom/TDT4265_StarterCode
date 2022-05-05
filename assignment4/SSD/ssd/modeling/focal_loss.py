@@ -22,7 +22,7 @@ class FocalLoss(nn.Module):
         self.sl1_loss = nn.SmoothL1Loss(reduction='none')
         self.anchors = nn.Parameter(anchors(order="xywh").transpose(0, 1).unsqueeze(dim = 0),
             requires_grad=False)
-        self.alpha = torch.Tensor(alpha).reshape((1,len(alpha))).cuda()
+        self.alpha = torch.Tensor(alpha).reshape((1, len(alpha))).cuda()
         self.gamma = gamma
         
 
@@ -52,8 +52,16 @@ class FocalLoss(nn.Module):
  
         num_classes = confs.shape[1]
         gt_labels_one_hot = F.one_hot(gt_labels, num_classes=num_classes).transpose(1,2)
-
-        focal_loss = -self.alpha.matmul((1-confs)**self.gamma) * gt_labels_one_hot * confs_log 
+        # print(gt_labels_one_hot.shape)
+        # print(gt_labels_one_hot[0, :, :10])
+        # for anchor in gt_labels_one_hot[0].T:
+        #     if anchor[0] != 1:
+        #         print(anchor)
+        # print(self.alpha)
+        # print(confs.shape)
+        focal_loss = -self.alpha.T * (1-confs)**self.gamma * gt_labels_one_hot * confs_log 
+        classification_loss = focal_loss.sum()
+        # focal_loss = focal_loss.sum(dim=1).mean()
 
         pos_mask = (gt_labels > 0).unsqueeze(1).repeat(1, 4, 1)
         bbox_delta = bbox_delta[pos_mask]
@@ -61,7 +69,6 @@ class FocalLoss(nn.Module):
         gt_locations = gt_locations[pos_mask]
         regression_loss = F.smooth_l1_loss(bbox_delta, gt_locations, reduction="sum")
         num_pos = gt_locations.shape[0]/4
-        classification_loss = focal_loss.sum() / num_pos 
         total_loss = regression_loss/num_pos + classification_loss/num_pos
         to_log = dict(
             regression_loss=regression_loss/num_pos,

@@ -134,10 +134,11 @@ def analyze_something(dataloader, cfg):
 
 
 def main():
-    # config_path = "configs/tdt4265.py"
-    config_path = "configs/tdt4265_updated.py"
+    config_path = "configs/tdt4265.py"
+    # config_path = "configs/tdt4265_updated.py"
     cfg = get_config(config_path)
-    dataset_to_analyze = "train"  # or "val"
+    # dataset_to_analyze = "train"  # or "val"
+    dataset_to_analyze = "val"  # or "val"
 
     print("Label map is:", cfg.label_map)
 

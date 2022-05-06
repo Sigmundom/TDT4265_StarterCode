@@ -2,7 +2,7 @@ from tops.config import LazyCall as L
 from ssd.modeling.focal_loss import FocalLoss
 
 # The line belows inherits the configuration set for the tdt4265 dataset
-from .t_2_3_1_fpn import (
+from .fpn import (
     train,
     optimizer,
     schedulers,

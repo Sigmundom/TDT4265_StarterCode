@@ -2,7 +2,7 @@ from ssd.modeling import RetinaNet
 from tops.config import LazyCall as L
 
 # The line belows inherits the configuration set for the tdt4265 dataset
-from .t_2_3_2_focal_loss import (
+from .focal_loss import (
     train,
     optimizer,
     schedulers,

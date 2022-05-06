@@ -4,7 +4,7 @@ from ssd.data.transforms import (
     GroundTruthBoxesToAnchors, RandomHorizontalFlip, RandomSampleCrop)
 import torchvision
 # The line belows inherits the configuration set for the tdt4265 dataset
-from .base import (
+from ..test_anchors.base import (
     train,
     optimizer,
     schedulers,

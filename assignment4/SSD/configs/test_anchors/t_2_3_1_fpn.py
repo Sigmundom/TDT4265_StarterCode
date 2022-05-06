@@ -19,7 +19,7 @@ from .t_2_2_data_augmentation import (
 )
 
 backbone = L(FPN)(
-    output_channels=5,
+    output_channels=256,
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}",
     type="resnet34", 

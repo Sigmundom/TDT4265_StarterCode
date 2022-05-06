@@ -23,7 +23,7 @@ model = L(RetinaNet)(
     anchors="${anchors}",
     loss_objective="${loss_objective}",
     num_classes=8 + 1,  # Add 1 for background
-    anchor_prob_initialization=False
+    improved_weight_init=True
 )
 
 anchors.aspect_ratios=[[2,3], [2, 3], [2, 3], [2, 3], [2,3], [2,3]] # Perhaps we should change some to [1,2]

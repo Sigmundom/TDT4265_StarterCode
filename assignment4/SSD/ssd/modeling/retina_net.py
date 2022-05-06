@@ -12,7 +12,7 @@ class RetinaNet(nn.Module):
             anchors,
             loss_objective,
             num_classes: int,
-            anchor_prob_initialization: bool):
+            improved_weight_init: bool):
         super().__init__()
         """
             Implements the SSD network.
@@ -29,7 +29,7 @@ class RetinaNet(nn.Module):
         assert all(num_boxes == anchors.num_boxes_per_fmap[0] for num_boxes in anchors.num_boxes_per_fmap), "All feature maps must have the same number of aspect ratios!"
         self.n_boxes = anchors.num_boxes_per_fmap[0]
 
-        self.regression_heads = nn.Sequential(
+        self.regression_head = nn.Sequential(
             nn.Conv2d(self.out_ch, self.out_ch, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Conv2d(self.out_ch, self.out_ch, kernel_size=3, padding=1),
@@ -40,7 +40,7 @@ class RetinaNet(nn.Module):
             nn.ReLU(),
             nn.Conv2d(self.out_ch, self.n_boxes * 4, kernel_size=3, padding=1),
             )
-        self.classification_heads = nn.Sequential(
+        self.classification_head = nn.Sequential(
             nn.Conv2d(self.out_ch, self.out_ch, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Conv2d(self.out_ch, self.out_ch, kernel_size=3, padding=1),
@@ -52,40 +52,39 @@ class RetinaNet(nn.Module):
             nn.Conv2d(self.out_ch, self.n_boxes * self.num_classes, kernel_size=3, padding=1),
             )
 
-        # self.regression_heads = nn.ModuleList(self.regression_heads)
-        # self.classification_heads = nn.ModuleList(self.classification_heads)
+
         self.anchor_encoder = AnchorEncoder(anchors)
-        self._init_weights(anchor_prob_initialization)
+        # if improved_weight_init:
+        #     self._init_weights_improved()
+        # else:
+        #     self._init_weights()
 
-    def _init_weights(self, anchor_prob_initialization):
-        if anchor_prob_initialization:
-            layers = [*self.regression_heads, *self.classification_heads]
-            for layer in layers:
-                if isinstance(layer, nn.Conv2d):
-                    nn.init.constant_(layer.bias, 0)
-                    nn.init.normal_(layer.weight, std=0.01)
-            
-            # last_conv_layer_bias = self.classification_heads[-1].bias
-            p = 0.99
-            background_bias = math.log(p * (self.num_classes-1)/1-p)
+    def _init_weights_improved(self):
+        layers = [*self.regression_head, *self.classification_head]
+        for layer in layers:
+            if isinstance(layer, nn.Conv2d):
+                nn.init.constant_(layer.bias, 0)
+                nn.init.normal_(layer.weight, std=0.01)
+        
+        # p = 0.99
+        # background_bias = math.log(p * ((self.num_classes-1)/(1-p)))
+        # nn.init.constant_(self.classification_head[-1].bias[:self.n_boxes], background_bias)
+        # print(self.classification_head[-1].bias)
 
-            nn.init.constant_(self.classification_heads[-1].bias[:self.n_boxes], background_bias)
-            print(self.classification_heads[-1].bias)
-        else:
-            layers = [*self.regression_heads, *self.classification_heads]
-            for layer in layers:
-                for param in layer.parameters():
-                    if param.dim() > 1: nn.init.xavier_uniform_(param)
+    def _init_weights(self):
+        # Not sure if this also works for deeper heads, but doesn't help to remove it either
+        layers = [*self.regression_head, *self.classification_head]
+        for layer in layers:
+            for param in layer.parameters():
+                if param.dim() > 1: nn.init.xavier_uniform_(param)
         
 
     def regress_boxes(self, features):
         locations = []
         confidences = []
-        for idx, x in enumerate(features):
-            # bbox_delta = self.regression_heads(x).view(x.shape[0], 4, -1)
-            # bbox_conf = self.classification_heads(x).view(x.shape[0], self.num_classes, -1)
-            bbox_delta = self.regression_heads(x).reshape(x.shape[0], 4, -1)
-            bbox_conf = self.classification_heads(x).reshape(x.shape[0], self.num_classes, -1)
+        for x in features:
+            bbox_delta = self.regression_head(x).view(x.shape[0], 4, -1)
+            bbox_conf = self.classification_head(x).view(x.shape[0], self.num_classes, -1)
             locations.append(bbox_delta)
             confidences.append(bbox_conf)
         bbox_delta = torch.cat(locations, 2).contiguous()

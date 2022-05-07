@@ -43,6 +43,7 @@ class FPN(torch.nn.Module):
 
         self.out_channels = 6*[output_channels]
         self.fpn = torchvision.ops.FeaturePyramidNetwork(self.in_channels_list, output_channels)
+        # self.fpn.
 
         self.extra = nn.Sequential(
                 nn.Conv2d(self.in_channels_list[4], 128, kernel_size=2, padding=1, stride=2),

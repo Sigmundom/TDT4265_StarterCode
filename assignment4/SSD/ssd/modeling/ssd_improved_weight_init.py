@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 from .anchor_encoder import AnchorEncoder
@@ -39,20 +40,15 @@ class SSD300WeigtInit(nn.Module):
             if isinstance(layer, nn.Conv2d):
                 nn.init.constant_(layer.bias, 0)
                 nn.init.normal_(layer.weight, std=0.01)
-                # for param in layer.parameters():
-                    # if param.dim() > 1: nn.init.normal_(param, std=0.01)
-        # layers = [*self.regression_heads, *self.classification_heads]
-        # for layer in layers:
-        #     for param in layer.parameters():
-        #         if param.dim() > 1: nn.init.xavier_uniform_(param)
+
         
         for head, n_boxes in zip(self.classification_heads, self.n_boxes):
             last_conv_layer_bias = head.bias
             p = 0.99
-            background_bias = torch.log(torch.tensor(p * (self.num_classes-1)/1-p))
+            background_bias = math.log(p * (self.num_classes-1)/(1-p))
 
-            nn.init.constant_(last_conv_layer_bias[:n_boxes], float(background_bias))
-            nn.init.constant_(last_conv_layer_bias[n_boxes:], 0)
+            nn.init.constant_(last_conv_layer_bias[:n_boxes], background_bias)
+            # nn.init.constant_(last_conv_layer_bias[n_boxes:], 0)
 
     def regress_boxes(self, features):
         locations = []

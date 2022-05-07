@@ -1,8 +1,7 @@
-from ssd.modeling import RetinaNet
+from ssd.modeling.ssd_improved_weight_init import SSD300WeigtInit
 from tops.config import LazyCall as L
 
-# The line belows inherits the configuration set for the tdt4265 dataset
-from .focal_loss import (
+from .fpn import (
     train,
     optimizer,
     schedulers,
@@ -18,12 +17,9 @@ from .focal_loss import (
     anchors
 )
 
-model = L(RetinaNet)(
+model = L(SSD300WeigtInit)(
     feature_extractor="${backbone}",
     anchors="${anchors}",
     loss_objective="${loss_objective}",
     num_classes=8 + 1,  # Add 1 for background
-    improved_weight_init=True
 )
-
-anchors.aspect_ratios=[[2,3], [2, 3], [2, 3], [2, 3], [2,3], [2,3]] # Perhaps we should change some to [1,2]

@@ -187,38 +187,6 @@ class Resize(torch.nn.Module):
         batch["image"] = torchvision.transforms.functional.resize(batch["image"], self.imshape, antialias=True)
         return batch
 
-class Bbox:
-    def __init__(self, x1, y1, h, w):
-        self.height = h
-        self.width = w
-        self.x1 = x1
-        self.x2 = x1 + w
-        self.y1 = y1
-        self.y2 = y1 + h
-        self.box = [self.x1, self.y1, self.x2, self.y2]
-
-    @property
-    def area(self):
-        """
-        Calculates the surface area. useful for IOU!
-        """
-        return (self.x2 - self.x1 + 1) * (self.y2 - self.y1 + 1)
-
-    def intersect(self, bbox):
-        x1 = max(self.x1, bbox.x1)
-        y1 = max(self.y1, bbox.y1)
-        x2 = min(self.x2, bbox.x2)
-        y2 = min(self.y2, bbox.y2)
-        intersection = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
-        return intersection
-
-    def iou(self, bbox):
-        intersection = self.intersect(bbox)
-
-        iou = intersection / float(self.area + bbox.area - intersection)
-        # return the intersection over union value
-        return iou
-
 
 class RandomErasing(torch.nn.Module):
 
@@ -237,15 +205,15 @@ class RandomErasing(torch.nn.Module):
       
             (_, image_h, image_w) = image.shape 
             keep_boxes = []
+            erased_area = np.array([i, j, i+w, j+h]).reshape((1,4))
             for i, box in enumerate(boxes):
-                x1 = int(box[0] * image_w)
-                y1 = int(box[1] * image_h)
-                w = int((box[2] - box[0]) * image_w)
-                h = int((box[3] - box[1]) * image_h)
-                rect_box = Bbox(x1, y1, h, w)
-                rect_erased = Bbox(i, j, h, w)
-                iou = rect_box.iou(rect_erased)
-                if iou < 0.5:
+                box = np.array(box)
+                box[[0,2]] *= image_w
+                box[[1,3]] *= image_h
+                box = box.astype(int)
+
+                iou = jaccard_numpy(erased_area, box)
+                if iou[0] < 0.5:
                     keep_boxes.append(i)
 
             if len(keep_boxes) > 0:

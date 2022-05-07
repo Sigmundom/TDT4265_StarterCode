@@ -1,10 +1,6 @@
 from tops.config import LazyCall as L
-from ssd.data.transforms import (
-    ToTensor, Normalize, Resize,
-    GroundTruthBoxesToAnchors, RandomHorizontalFlip, RandomSampleCrop, RandomErasing)
-import torchvision
-# The line belows inherits the configuration set for the tdt4265 dataset
-from ..task2_4_adapt.fl_alpha import (
+
+from ..task2_4_adapt.anchors_AR import (
     train,
     optimizer,
     schedulers,

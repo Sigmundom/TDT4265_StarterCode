@@ -52,16 +52,9 @@ class FocalLoss(nn.Module):
  
         num_classes = confs.shape[1]
         gt_labels_one_hot = F.one_hot(gt_labels, num_classes=num_classes).transpose(1,2)
-        # print(gt_labels_one_hot.shape)
-        # print(gt_labels_one_hot[0, :, :10])
-        # for anchor in gt_labels_one_hot[0].T:
-        #     if anchor[0] != 1:
-        #         print(anchor)
-        # print(self.alpha)
-        # print(confs.shape)
-        focal_loss = -self.alpha.T * (1-confs)**self.gamma * gt_labels_one_hot * confs_log 
+  
+        focal_loss = -self.alpha.T * torch.pow((1-confs), self.gamma) * gt_labels_one_hot * confs_log 
         classification_loss = focal_loss.sum()
-        # focal_loss = focal_loss.sum(dim=1).mean()
 
         pos_mask = (gt_labels > 0).unsqueeze(1).repeat(1, 4, 1)
         bbox_delta = bbox_delta[pos_mask]

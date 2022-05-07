@@ -54,8 +54,8 @@ class RetinaNet(nn.Module):
 
 
         self.anchor_encoder = AnchorEncoder(anchors)
-        # if improved_weight_init:
-        #     self._init_weights_improved()
+        if improved_weight_init:
+            self._init_weights_improved()
         # else:
         #     self._init_weights()
 
@@ -66,17 +66,17 @@ class RetinaNet(nn.Module):
                 nn.init.constant_(layer.bias, 0)
                 nn.init.normal_(layer.weight, std=0.01)
         
-        # p = 0.99
-        # background_bias = math.log(p * ((self.num_classes-1)/(1-p)))
-        # nn.init.constant_(self.classification_head[-1].bias[:self.n_boxes], background_bias)
-        # print(self.classification_head[-1].bias)
+        p = 0.99
+        background_bias = math.log(p * ((self.num_classes-1)/(1-p)))
+        nn.init.constant_(self.classification_head[-1].bias[:self.n_boxes], background_bias)
+        print(self.classification_head[-1].bias)
 
-    def _init_weights(self):
-        # Not sure if this also works for deeper heads, but doesn't help to remove it either
-        layers = [*self.regression_head, *self.classification_head]
-        for layer in layers:
-            for param in layer.parameters():
-                if param.dim() > 1: nn.init.xavier_uniform_(param)
+    # def _init_weights(self):
+    #     # Not sure if this also works for deeper heads, but doesn't help to remove it either
+    #     layers = [*self.regression_head, *self.classification_head]
+    #     for layer in layers:
+    #         for param in layer.parameters():
+    #             if param.dim() > 1: nn.init.xavier_uniform_(param)
         
 
     def regress_boxes(self, features):

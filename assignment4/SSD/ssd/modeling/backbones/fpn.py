@@ -35,6 +35,9 @@ class FPN(torch.nn.Module):
         elif type == 'resnet50':
             self.in_channels_list = [64, 256, 512, 1024, 2048, 64]
             self.resnet = torchvision.models.resnet50(pretrained=pretrained)
+        elif type == 'resnet101':
+            self.in_channels_list = [64, 256, 512, 1024, 2048, 64]
+            self.resnet = torchvision.models.resnet50(pretrained=pretrained)
         else:
             raise Exception(f'FPN does not support model type {type}')
 

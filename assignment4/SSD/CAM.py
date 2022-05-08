@@ -87,6 +87,22 @@ def fasterrcnn_reshape_transform(x):
     return activations
 
 
+def renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam):
+        """Normalize the CAM to be in the range [0, 1] 
+        inside every bounding boxes, and zero outside of the bounding boxes. """
+        renormalized_cam = np.zeros(grayscale_cam.shape, dtype=np.float32)
+        images = []
+        for x1, y1, x2, y2 in boxes:
+            img = renormalized_cam * 0
+            img[y1:y2, x1:x2] = scale_cam_image(grayscale_cam[y1:y2, x1:x2].copy())    
+            images.append(img)
+        
+        renormalized_cam = np.max(np.float32(images), axis = 0)
+        renormalized_cam = scale_cam_image(renormalized_cam)
+        eigencam_image_renormalized = show_cam_on_image(image_float_np, renormalized_cam, use_rgb=True)
+        return eigencam_image_renormalized
+
+
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=str))
@@ -141,27 +157,13 @@ def main(config_path, image, out, renormalize):
     grayscale_cam = cam(input_tensor, targets=targets)
     # Take the first image in the batch:
     grayscale_cam = grayscale_cam[0, :]
-    cam_image = show_cam_on_image(image_float_np, grayscale_cam, use_rgb=True)
-    # And lets draw the boxes again:
-    image_with_bounding_boxes = draw_boxes(boxes, labels, classes, cam_image)
 
-    def renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam):
-        """Normalize the CAM to be in the range [0, 1] 
-        inside every bounding boxes, and zero outside of the bounding boxes. """
-        renormalized_cam = np.zeros(grayscale_cam.shape, dtype=np.float32)
-        images = []
-        for x1, y1, x2, y2 in boxes:
-            img = renormalized_cam * 0
-            img[y1:y2, x1:x2] = scale_cam_image(grayscale_cam[y1:y2, x1:x2].copy())    
-            images.append(img)
-        
-        renormalized_cam = np.max(np.float32(images), axis = 0)
-        renormalized_cam = scale_cam_image(renormalized_cam)
-        eigencam_image_renormalized = show_cam_on_image(image_float_np, renormalized_cam, use_rgb=True)
-        image_with_bounding_boxes = draw_boxes(boxes, labels, classes, eigencam_image_renormalized)
-        return image_with_bounding_boxes
+    if renormalize:
+        cam_image = renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam)
+    else:
+        cam_image = show_cam_on_image(image_float_np, grayscale_cam, use_rgb=True)
     
-    # image_with_bounding_boxes = renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam)
+    image_with_bounding_boxes = draw_boxes(boxes, labels, classes, cam_image)
     out_image = Image.fromarray(image_with_bounding_boxes)
     out_image.save(out)
 

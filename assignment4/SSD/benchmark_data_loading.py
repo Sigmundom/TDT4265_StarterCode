@@ -9,9 +9,9 @@ np.random.seed(0)
 
 
 @click.command()
-@click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=str))
 def main(config_path):
-    cfg = LazyConfig.load(str(config_path))
+    cfg = LazyConfig.load(config_path)
     dataloader = instantiate(cfg.data_train.dataloader)
     gpu_transform = instantiate(cfg.data_train.gpu_transform)
     for batch in dataloader: # Warmup

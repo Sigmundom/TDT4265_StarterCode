@@ -34,6 +34,15 @@ data_val.dataset = L(TDT4265Dataset)(
     img_folder=get_dataset_dir("tdt4265/dataset"),
     transform="${val_cpu_transform}",
     annotation_file=get_dataset_dir("tdt4265/dataset/val_annotations.json"))
+# data_train.dataset = L(TDT4265Dataset)(
+#     img_folder=get_dataset_dir("tdt_4265"),
+#     transform="${train_cpu_transform}",
+#     annotation_file=get_dataset_dir("tdt_4265/train_annotations.json"))
+# data_val.dataset = L(TDT4265Dataset)(
+#     img_folder=get_dataset_dir("tdt_4265"),
+#     transform="${val_cpu_transform}",
+#     annotation_file=get_dataset_dir("tdt_4265/val_annotations.json"))
+
 data_val.gpu_transform = gpu_transform
 data_train.gpu_transform = gpu_transform
 

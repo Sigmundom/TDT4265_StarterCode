@@ -47,12 +47,12 @@ class FocalLoss(nn.Module):
         """
         gt_bbox = gt_bbox.transpose(1, 2).contiguous() # reshape to [batch_size, 4, num_anchors]
         
-        confs= F.softmax(confs, dim=1)
         confs_log= F.log_softmax(confs, dim=1)
+        confs = F.softmax(confs, dim=1)
  
         num_classes = confs.shape[1]
         gt_labels_one_hot = F.one_hot(gt_labels, num_classes=num_classes).transpose(1,2)
-  
+        
         focal_loss = -self.alpha.T * torch.pow((1-confs), self.gamma) * gt_labels_one_hot * confs_log 
         classification_loss = focal_loss.sum()
 

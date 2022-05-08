@@ -1,7 +1,7 @@
 from ssd.modeling import AnchorBoxes
 from tops.config import LazyCall as L
 # The line belows inherits the configuration set for the tdt4265 dataset
-from ..task2_3_retina_net.focal_loss import (
+from ..task2_3_retina_net.ext_heads_focal_w_init import (
     train,
     optimizer,
     schedulers,

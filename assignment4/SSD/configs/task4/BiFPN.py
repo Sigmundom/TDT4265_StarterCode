@@ -1,7 +1,7 @@
 from ssd.modeling.backbones import BiFPN
 from tops.config import LazyCall as L
 # The line belows inherits the configuration set for the tdt4265 dataset
-from ..task2_4_adapt.anchors_AR import (
+from ..task2_5_extended_dataset.extended_dataset import (
     train,
     optimizer,
     schedulers,
@@ -18,10 +18,10 @@ from ..task2_4_adapt.anchors_AR import (
 )
 
 backbone = L(BiFPN)(
-    output_channels=64,
+    output_channels=128,
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}",
-    type="resnet50", 
+    type="resnet34", 
     pretrained=True
     )
 

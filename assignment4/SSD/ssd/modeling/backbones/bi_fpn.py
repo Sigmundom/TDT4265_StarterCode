@@ -2,9 +2,10 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import torchvision
-from typing import OrderedDict, Tuple, List
+from typing import Tuple, List
 
-
+# The classes DepthwiseConvBlock and ConvBlcok is copied as is from "https://github.com/tristandb/EfficientDet-PyTorch/blob/master/bifpn.py"
+# The BiFPNBlock and BiFPNLayer is also copied from the same repo, but a few adaptions and changes has been done to fit this project.
 
 class DepthwiseConvBlock(nn.Module):
     """
@@ -65,7 +66,6 @@ class BiFPNBlock(nn.Module):
         self.p7_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p8_out = DepthwiseConvBlock(feature_size, feature_size)
 
-        # TODO: Init weights
         self.w1 = nn.Parameter(torch.ones(2, 5))
         self.w1_relu = nn.ReLU()
         self.w2 = nn.Parameter(torch.ones(3, 5))
@@ -102,51 +102,12 @@ class BiFPNLayer(nn.Module):
         super(BiFPNLayer, self).__init__()
         self.prepare_input = nn.ModuleList([nn.Conv2d(s, feature_size, kernel_size=1, stride=1, padding=0) for s in size])
 
-        # # p6 is obtained via a 3x3 stride-2 conv on C5
-        # self.p6 = nn.Conv2d(size[2], feature_size, kernel_size=3, stride=2, padding=1)
-
-        # # p7 is computed by applying ReLU followed by a 3x3 stride-2 conv on p6
-        # self.p7 = ConvBlock(feature_size, feature_size, kernel_size=3, stride=2, padding=1)
-
-        # bifpns = []
-        # for _ in range(num_layers):
-        #     bifpns.append(BiFPNBlock(feature_size, epsilon))
-        # self.bifpn = nn.Sequential(*bifpns)
         self.bifpn = nn.Sequential(*[BiFPNBlock(feature_size, epsilon) for _ in range(num_layers)])
 
     def forward(self, inputs):
-
-        # Calculate the input column of BiFPN
-        # p3_x = self.p3(c3)
-        # p4_x = self.p4(c4)
-        # p5_x = self.p5(c5)
-        # p6_x = self.p6(c5)
-        # p7_x = self.p7(p6_x)
-
-        # features = [p3_x, p4_x, p5_x, p6_x, p7_x]
         features = [self.prepare_input[i](inputs[i]) for i in range(len(inputs))]
 
         return self.bifpn(features)
-
-
-
-# class BiFPNLayer(torch.nn.Module):
-#     def __init__(self, in_channels_list):
-#         super().__init__()
-
-#         self.out_5 = nn.Conv2d(in_channels_list[5], in_channels_list[5], kernel_size=3, padding=1)
-#         resample = ResampleFeatureMap(in_channels=40, out_channels=112, reduction_ratio=2)
-#         self.ff_6 = nn.Sequential(
-
-#         )
-
-
-#     def __call__(self, in_features):
-#         out_features = OrderedDict()
-
-#         out_features['f5'] = self.out_5(in_features['f5'])
-
-#         td_6 = torch.concat((out_features['f4'], out_features['f5']
 
 
 
@@ -200,7 +161,6 @@ class BiFPN(torch.nn.Module):
             )
 
     def _resnet_forward(self, x):
-        # features = OrderedDict()
         features = []
 
         x = self.resnet.conv1(x)
@@ -208,29 +168,23 @@ class BiFPN(torch.nn.Module):
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
 
-        # features['f0'] = x
         features.append(x)
 
         x = self.resnet.layer1(x)
         x = self.resnet.maxpool(x)
-        # features['f1'] = x
         features.append(x)
 
         x = self.resnet.layer2(x)
-        # features['f2'] = x
         features.append(x)
 
         x = self.resnet.layer3(x)
-        # features['f3'] = x
         features.append(x)
 
 
         x = self.resnet.layer4(x)
-        # features['f4'] = x
         features.append(x)
 
         x = self.extra(x)
-        # features['f5'] = x
         features.append(x)
 
         return features

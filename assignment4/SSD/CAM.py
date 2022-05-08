@@ -90,7 +90,10 @@ def fasterrcnn_reshape_transform(x):
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=str))
-def main(config_path):
+@click.option("--image", "-i", default='data/tdt4265/dataset/images/train/trip007_glos_Video00005_52.png', type=click.Path(exists=True, dir_okay=False, path_type=str))
+@click.option("--out", "-o", default='cam_image.png', type=click.Path(exists=False, dir_okay=False, path_type=str))
+@click.option("--renormalize", '-r', default=False, is_flag=True, help="Normalize the CAM to be in the range [0, 1] inside every bounding boxes, and zero outside of the bounding boxes.")
+def main(config_path, image, out, renormalize):
     cfg = utils.load_config(config_path)
     tops.init(cfg.output_dir)
 
@@ -102,7 +105,7 @@ def main(config_path):
         train_state = checkpointer.load_registered_models(load_best=False)
         logger.log(f"Resuming train from: epoch: {logger.epoch()}, global step: {logger.global_step()}")
 
-    image = np.array(Image.open('data/tdt4265/dataset/images/train/trip007_glos_Video00005_52.png'))
+    image = np.array(Image.open(image))
     image_float_np = np.float32(image) / 255
 
     # define the torchvision image transforms
@@ -117,7 +120,6 @@ def main(config_path):
     input_tensor = input_tensor.unsqueeze(0)
 
     gpu_transform = torchvision.transforms.Normalize(mean=[0.4765, 0.4774, 0.2259], std=[0.2951, 0.2864, 0.2878])
-    # gpu_transform = instantiate(cfg.gpu_transform)
     gpu_transform(input_tensor)
 
     anchors = instantiate(cfg.anchors)
@@ -126,11 +128,6 @@ def main(config_path):
 
     # Run the model and display the detections
     boxes, classes, labels, indices = predict(input_tensor, model, 0.95, anchor_encoder, imshape)
-
-    # Show the image without CAM:
-    # image = draw_boxes(boxes, labels, classes, image)
-    # image = Image.fromarray(image)
-    # image.save('gray.png')
 
     target_layers = [model.feature_extractor.fpn]
     targets = [FasterRCNNBoxScoreTarget(labels=labels, bounding_boxes=boxes)]
@@ -166,7 +163,7 @@ def main(config_path):
     
     # image_with_bounding_boxes = renormalize_cam_in_bounding_boxes(boxes, image_float_np, grayscale_cam)
     out_image = Image.fromarray(image_with_bounding_boxes)
-    out_image.save('test.png')
+    out_image.save(out)
 
 if __name__ == '__main__':
     main()

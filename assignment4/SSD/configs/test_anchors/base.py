@@ -20,6 +20,7 @@ from ..tdt4265 import (
 # The images in the tdt4265 dataset are of size 128 * 1024, so resizing to 300*300 is probably a bad idea
 # Change the imshape to (128, 1024) and experiment with better prior boxes
 train.imshape = (128, 1024)
+train.epochs = 50
 
 
 anchors = L(AnchorBoxes)(

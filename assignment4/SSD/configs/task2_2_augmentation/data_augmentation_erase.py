@@ -20,6 +20,7 @@ from ..test_anchors.base import (
     anchors
 )
 
+
 train_cpu_transform = L(torchvision.transforms.Compose)(transforms=[
     L(RandomSampleCrop)(),
     L(ToTensor)(),
